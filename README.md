@@ -1,8 +1,8 @@
 # Scalar Network Analyzer
 
-A [https://en.wikipedia.org/wiki/Network_analyzer_%28electrical%29](scalar network analyzer) (SNA) measures the amplitude of an output signal of a circuit as a function of the input frequency.
+A [scalar network analyzer](https://en.wikipedia.org/wiki/Network_analyzer_%28electrical%29) (SNA) measures the amplitude of an output signal of a circuit as a function of the input frequency.
 
-This project provides a circuit, firmware and software to implement a very simple and cheap SNA. It uses a [http://www.minikits.com.au/electronic-kits/dds-synthesizer/basic-dds/AD9850-DDS-01](AD9850 DDS module) as the programmable signal generator and a AD8307 logarithmic amplifier in conjecture with the ADC of a ATMEGA 168 to record the output amplitude. The SNA hardware is interfaced via the common RS-232 using a MAX232 level converter. The firmware for the ATMEGA 168 can be found in the firmware directory.
+This project provides a circuit, firmware and software to implement a very simple and cheap SNA. It uses a [AD9850 DDS module](http://www.minikits.com.au/electronic-kits/dds-synthesizer/basic-dds/AD9850-DDS-01) as the programmable signal generator and a AD8307 logarithmic amplifier in conjecture with the ADC of a ATMEGA 168 to record the output amplitude. The SNA hardware is interfaced via the common RS-232 using a MAX232 level converter. The firmware for the ATMEGA 168 can be found in the firmware directory.
 
 The client software then provides a simple means of performing the measurements and displays the results.
 
