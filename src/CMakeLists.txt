@@ -1,7 +1,7 @@
 set(sna_SOURCES main.cc logger.cc
-    sna.cc abstracttask.cc scantask.cc mainwindow.cc livepanel.cc scanpanel.cc plot.cc aboutwidget.cc)
+    sna.cc abstracttask.cc scantask.cc mainwindow.cc livepanel.cc scanpanel.cc plot.cc aboutwidget.cc portdialog.cc)
 set(sna_MOC_HEADERS 
-    sna.hh abstracttask.hh scantask.hh mainwindow.hh livepanel.hh scanpanel.hh plot.hh aboutwidget.hh)
+    sna.hh abstracttask.hh scantask.hh mainwindow.hh livepanel.hh scanpanel.hh plot.hh aboutwidget.hh portdialog.hh)
 qt5_wrap_cpp(sna_MOC_SOURCES ${sna_MOC_HEADERS})
 
 set(sna_HEADERS logger.hh ${sna_MOC_HEADERS} )

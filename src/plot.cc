@@ -10,7 +10,7 @@
 
 
 Plot::Plot(QWidget *parent) :
-  QWidget(parent), _F(), _dBm(), _pointer(false)
+  QWidget(parent), _Fmin(0), _Fmax(0), _dBmMin(0), _dBmMax(0), _F(), _dBm(), _pointer(false)
 {
   setMinimumSize(640, 480);
 }

@@ -3,6 +3,7 @@
 #include "sna.hh"
 #include "logger.hh"
 #include "mainwindow.hh"
+#include "portdialog.hh"
 #include <iostream>
 
 
@@ -11,7 +12,13 @@ int main(int argc, char *argv[]) {
 
   Logger::get().addHandler(new StreamLogHandler(LOG_DEBUG, std::cerr));
 
-  SNA sna("/dev/tty.");
+  PortDialog dialog;
+  if (QDialog::Accepted != dialog.exec()) { return 0; }
+
+  QString name = dialog.name();
+  QString systemLocation = dialog.systemLocation();
+
+  SNA sna(systemLocation);
 
   MainWindow win(sna);
   win.show();
