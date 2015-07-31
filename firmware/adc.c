@@ -12,8 +12,8 @@ void adc_init() {
   ADMUX =
       // external reference (AREF=2.5V)
       (0 << REFS1) | (0 << REFS0) |
-      // Select ADC5 as intput
-      (0 << MUX3) | (1 << MUX2) | (0 << MUX1) | (1 << MUX0);
+      // Select ADC4 as intput
+      (0 << MUX3) | (1 << MUX2) | (0 << MUX1) | (0 << MUX0);
 }
 
 uint16_t adc_get() {

@@ -3,16 +3,14 @@
 
 #include <QTextEdit>
 
+/** Simple widget to display the name and license. */
 class AboutWidget : public QTextEdit
 {
   Q_OBJECT
+
 public:
+  /** Constructor. */
   explicit AboutWidget(QWidget *parent = 0);
-
-signals:
-
-public slots:
-
 };
 
 #endif // ABOUTWIDGET_HH

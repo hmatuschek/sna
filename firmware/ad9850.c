@@ -3,27 +3,30 @@
 #include <util/delay.h>
 
 void ad9850_send_bit(uint8_t bit) {
-  if (bit) { PORTC |= (1<<DDC1); }
-  else { PORTC &= ~(1<<DDC1); }
-  PORTC |= (1<<DDC3);
+  if (bit) { PORTB |= (1<<DDB0); }
+  else { PORTB &= ~(1<<DDB0); }
+  PORTD |= (1<<DDD6);
   _delay_us(1);
-  PORTC &= ~(1<<DDC3);
+  PORTD &= ~(1<<DDD6);
   _delay_us(1);
 }
 
 void ad9850_update_frequency() {
-  PORTC |= (1<<DDC2);
+  PORTD |= (1<<DDD7);
   _delay_us(1);
-  PORTC &= ~(1<<DDC2);
+  PORTD &= ~(1<<DDD7);
   _delay_us(1);
 }
 
 void ad9850_init() {
-  // PC1 -> DATA
-  // PC2 -> FQ_UP
-  // PC3 -> CLK
-  DDRC  |= (1 << DDC1) | (1 << DDC2) | (1 << DDC3);
-  PORTC &= ~( (1 << DDC1) | (1 << DDC2) | (1 << DDC3) );
+  // PB0 -> DATA
+  // PD6 -> CLK
+  // PD7 -> FQ_UP
+  DDRB  |= (1 << DDB0);
+  DDRD  |= (1 << DDD6) | (1 << DDD7);
+  // set zero
+  PORTB &= ~( (1<< DDB0) );
+  PORTD &= ~( (1 << DDD6) | (1 << DDD7) );
 
   ad9850_send_bit(0);
   ad9850_send_bit(0);

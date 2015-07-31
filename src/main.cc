@@ -15,9 +15,7 @@ int main(int argc, char *argv[]) {
   PortDialog dialog;
   if (QDialog::Accepted != dialog.exec()) { return 0; }
 
-  QString name = dialog.name();
   QString systemLocation = dialog.systemLocation();
-
   SNA sna(systemLocation);
 
   MainWindow win(sna);
