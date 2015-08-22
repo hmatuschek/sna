@@ -6,52 +6,37 @@
 
 
 ScanTask::ScanTask(SNA &sna, QObject *parent)
-  : AbstractTask(sna, parent), _delay(0), _F(), _dBm(), _baseline()
+  : AbstractTask(sna, parent), _F(), _dBm(), _baseline(), _pauseTimer(), _delayTimer()
 {
-  // pass...
+  _pauseTimer.setInterval(10);
+  _pauseTimer.setSingleShot(true);
+
+  _delayTimer.setInterval(0);
+  _delayTimer.setSingleShot(true);
+
+  QObject::connect(&_pauseTimer, SIGNAL(timeout()), this, SLOT(_onSetFrequency()), Qt::QueuedConnection);
+  QObject::connect(&_delayTimer, SIGNAL(timeout()), this, SLOT(_onReceiveValue()), Qt::QueuedConnection);
 }
 
 ScanTask::~ScanTask() {
   // pass...
 }
 
-void
-ScanTask::run() {
-  // Scan
-  for (size_t i=0; i<_F.size(); i++) {
-    if (0 < _delay) {
-      _sna.setFrequency(_F[i]);
-      msleep(_delay);
-      if (SCAN == _mode) {
-        //_dBm[i] = _sna.value()-_baseline[i];
-        _dBm[i] = std::log(_F[i]);
-      } else {
-        _baseline[i] = _sna.value();
-      }
-    } else {
-      if (SCAN == _mode) {
-        //_dBm[i] = _sna.valueAt(_F[i])-_baseline[i];
-        _dBm[i] = std::log(_F[i]);
-      } else {
-        _baseline[i] = _sna.valueAt(_F[i]);
-      }
-    }
-    emit progress(double(i+1)/_F.size());
-  }
-}
-
 unsigned int
 ScanTask::delay() const {
-  return _delay;
+  return _delayTimer.interval();
 }
 
 void
 ScanTask::setDelay(unsigned int delay) {
-  _delay = delay;
+  _delayTimer.setInterval(delay);
 }
 
 void
 ScanTask::setRange(double Fmin, double Fmax, size_t Nstep) {
+  LogMessage msg(LOG_DEBUG);
+  msg << "Reset scan range: " << Fmin << ":" << Fmax << " @ " << Nstep;
+  Logger::get().log(msg);
   if (2 > Nstep) { _F.clear(); _dBm.clear(); return; }
   _F.resize(Nstep); _dBm.resize(Nstep); _baseline.resize(Nstep);
   double F = std::min(Fmin, Fmax);
@@ -63,14 +48,20 @@ ScanTask::setRange(double Fmin, double Fmax, size_t Nstep) {
 
 void
 ScanTask::scan() {
-  _mode = SCAN;
-  start();
+  QObject::connect(&_sna, SIGNAL(frequencySet()), this, SLOT(_onFrequencySet()), Qt::QueuedConnection);
+  QObject::connect(&_sna, SIGNAL(valueReceived(double)), this, SLOT(_onValueReceived(double)), Qt::QueuedConnection);
+  QObject::connect(&_sna, SIGNAL(error()), this, SLOT(_onError()), Qt::QueuedConnection);
+  _mode = SCAN; _currentIndex = 0;
+  _pauseTimer.start();
 }
 
 void
 ScanTask::calibrate() {
-  _mode = CALIBRATE;
-  start();
+  QObject::connect(&_sna, SIGNAL(frequencySet()), this, SLOT(_onFrequencySet()), Qt::QueuedConnection);
+  QObject::connect(&_sna, SIGNAL(valueReceived(double)), this, SLOT(_onValueReceived(double)), Qt::QueuedConnection);
+  QObject::connect(&_sna, SIGNAL(error()), this, SLOT(_onError()), Qt::QueuedConnection);
+  _mode = CALIBRATE; _currentIndex = 0;
+  _pauseTimer.start();
 }
 
 ScanTask::Mode
@@ -104,3 +95,44 @@ ScanTask::save(const QString &filename) {
   }
 }
 
+
+void
+ScanTask::_onSetFrequency() {
+  if (_F.size() == _currentIndex) { return; };
+  _sna.sendSetFrequency(_F[_currentIndex]);
+}
+
+void
+ScanTask::_onFrequencySet() {
+  _delayTimer.start();
+}
+
+void
+ScanTask::_onReceiveValue() {
+  _sna.sendGetValue();
+}
+
+void
+ScanTask::_onValueReceived(double val) {
+  if (SCAN == _mode) {
+    _dBm[_currentIndex] = val - _baseline[_currentIndex];
+  } else if (CALIBRATE == _mode) {
+    _baseline[_currentIndex] = val;
+  }
+  _currentIndex++;
+  emit progress(double(_currentIndex)/_F.size());
+  if (_currentIndex == _F.size()) {
+    QObject::disconnect(&_sna, SIGNAL(frequencySet()), this, SLOT(_onFrequencySet()));
+    QObject::disconnect(&_sna, SIGNAL(valueReceived(double)), this, SLOT(_onValueReceived(double)));
+    QObject::disconnect(&_sna, SIGNAL(error()), this, SLOT(_onError()));
+    _mode = IDLE;
+    emit finished();
+  } else {
+    _pauseTimer.start();
+  }
+}
+
+void
+ScanTask::_onError() {
+  _pauseTimer.start();
+}

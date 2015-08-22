@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QDoubleSpinBox>
+#include <QComboBox>
 
 #include "sna.hh"
 
@@ -28,14 +29,19 @@ signals:
   void stopped();
 
 protected slots:
+  /** Callback for mode selection. */
+  void _onModeSelected(int idx);
   /** Callback for the start/stop button. */
-  void onStartToggled(bool enabled);
+  void _onStartToggled(bool enabled);
   /** Callback for the update timer. */
-  void onUpdate();
+  void _onUpdate();
   /** Callback for the update periode selection. */
-  void onPeriodChanged(int value);
+  void _onPeriodChanged(int value);
   /** Callback for the frequency selection. */
-  void onFrequencyChanged(double value);
+  void _onFrequencyChanged(double value);
+  void _onFrequencySet();
+  void _onValueReceived(double value);
+  void _onError();
 
 protected:
   /** A weak reference to the SNA instance. */
@@ -44,12 +50,22 @@ protected:
   QLabel *_dBm;
   /** Label displaying the output frequency. */
   QLabel *_F;
+  /** Mode selection. */
+  QComboBox *_mode;
   /** Frequency selection. */
   QDoubleSpinBox *_freq;
   /** Update-period selection. */
   QSpinBox *_period;
   /** Start/stop button. */
   QPushButton *_start;
+
+  /** If true, the frequency has changed. */
+  bool _Fupdate;
+  /** If true, oscillator is enabled. */
+  bool _oscEnabled;
+  /** If true, pwr measurement is enabled. */
+  bool _pwrEnabled;
+
   /** Update timer. */
   QTimer _timer;
 };

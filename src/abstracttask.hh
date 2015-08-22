@@ -3,11 +3,10 @@
 
 #include "sna.hh"
 #include <QObject>
-#include <QThread>
 
 
 /** Base class of tasks being performed in a separate thread. */
-class AbstractTask : public QThread
+class AbstractTask: public QObject
 {
   Q_OBJECT
 
@@ -19,9 +18,13 @@ public:
   /** Destructor. */
   virtual ~AbstractTask();
 
+public slots:
+  void start();
+
 signals:
   /** Gets emitted on progress. */
   void progress(double value);
+  void finished();
 
 protected:
   /** A weak reference to the SNA instance. */

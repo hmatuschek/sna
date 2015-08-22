@@ -9,14 +9,14 @@
 
 
 ScanPanel::ScanPanel(SNA &sna, QWidget *parent)
-  : QWidget(parent), _sna(sna), _scan(sna)
+  : QWidget(parent), _sna(sna), _scan(sna), _calibrationNeeded(true)
 {
   double Fmin = _sna.settings().value("scan/Fmin", 1e3).toDouble();
   double Fmax = _sna.settings().value("scan/Fmax", 2e3).toDouble();
   unsigned int Nstep = _sna.settings().value("scan/steps", 100).toUInt();
   unsigned int delay = _sna.settings().value("scan/delay", 100).toUInt();
 
-  _scan.setRange(Fmin, Fmax, Nstep);
+  _scan.setRange(Fmin*1e3, Fmax*1e3, Nstep);
   _scan.setDelay(delay);
 
   QLabel *label = new QLabel(tr("Settings"));
@@ -103,6 +103,10 @@ ScanPanel::ScanPanel(SNA &sna, QWidget *parent)
   QObject::connect(_save, SIGNAL(clicked()), this, SLOT(onSave()));
   QObject::connect(&_scan, SIGNAL(finished()), this, SLOT(onTaskFinished()));
   QObject::connect(&_scan, SIGNAL(progress(double)), this, SLOT(onProgress(double)));
+
+  QObject::connect(_Fmin, SIGNAL(valueChanged(double)), this, SLOT(onCalibrationNeeded()));
+  QObject::connect(_Fmax, SIGNAL(valueChanged(double)), this, SLOT(onCalibrationNeeded()));
+  QObject::connect(_steps, SIGNAL(valueChanged(int)), this, SLOT(onCalibrationNeeded()));
 }
 
 
@@ -126,13 +130,11 @@ ScanPanel::onStart(bool enabled) {
   _progress->setValue(0);
 
   // Update scan task
-  bool needs_calibration =
-      (_scan.Fmin() != _Fmin->value()*1e3) | (_scan.Fmax() != _Fmax->value()*1e3) |
-      (_scan.steps() != _steps->value()) | (_scan.delay() != _delay->value());
-  if (needs_calibration) {
+  if (_calibrationNeeded) {
     _scan.setRange(_Fmin->value()*1e3, _Fmax->value()*1e3, _steps->value());
     _scan.setDelay(_delay->value());
   }
+
   // go
   _scan.scan();
 }
@@ -157,13 +159,10 @@ ScanPanel::onCalibrate(bool enabled) {
   _progress->setValue(0);
 
   // Update scan task
-  bool needs_calibration =
-      (_scan.Fmin() != _Fmin->value()*1e3) | (_scan.Fmax() != _Fmax->value()*1e3) |
-      (_scan.steps() != _steps->value()) | (_scan.delay() != _delay->value());
-  if (needs_calibration) {
-    _scan.setRange(_Fmin->value()*1e3, _Fmax->value()*1e3, _steps->value());
-    _scan.setDelay(_delay->value());
-  }
+  _scan.setRange(_Fmin->value()*1e3, _Fmax->value()*1e3, _steps->value());
+  _scan.setDelay(_delay->value());
+  _calibrationNeeded = false;
+
   // go
   _scan.calibrate();
 }
@@ -172,15 +171,17 @@ ScanPanel::onCalibrate(bool enabled) {
 void
 ScanPanel::onTaskFinished() {
   emit stopped();
+  if (_start->isChecked()) {
+    _plot->plot(_scan.F(), _scan.dBm());
+    _save->setEnabled(true);
+  }
   _start->setEnabled(true);
   _start->setChecked(false);
   _calibrate->setEnabled(true);
   _calibrate->setChecked(false);
   _progress->setValue(100);
-  if (ScanTask::SCAN == _scan.mode()) {
-    _plot->plot(_scan.F(), _scan.dBm(), _scan.steps());
-    _save->setEnabled(true);
-  }
+  // disable oscillator.
+  _sna.sendShutdown();
 }
 
 void
@@ -199,5 +200,12 @@ ScanPanel::onSave() {
 void
 ScanPanel::onReset() {
   _scan.reset();
+  _calibrationNeeded = true;
   _save->setEnabled(false);
+  _plot->clear();
+}
+
+void
+ScanPanel::onCalibrationNeeded() {
+  _calibrationNeeded = true;
 }

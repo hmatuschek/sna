@@ -27,9 +27,9 @@ int main(void) {
     switch( cmd ) {
     // GET_VALUE
     case 0x01: {
-      uint8_t v = 0;
-      for (uint8_t i=0; i<32; i++) { v += adc_get(); }
-      uart_putc(0x00); uart_putc(v>>8); uart_putc(v);
+      uint16_t v = 0;
+      for (uint8_t i=0; i<64; i++) { v += adc_get(); }
+      uart_putc(0x00); uart_putc(v>>8); uart_putc(v&0xff);
     }
       break;
 
@@ -57,13 +57,19 @@ int main(void) {
       // set factor
       ad9850_set(factor);
       // Measure
-      uint8_t v = 0;
+      uint16_t v = 0;
       // adc_get() returns a 10bit uint.
       // summing 32 10bit values will result into a 16bit uint
-      for (uint8_t i=0; i<32; i++) { v += adc_get(); }
+      for (uint8_t i=0; i<64; i++) { v += adc_get(); }
       // Send result
-      uart_putc(0x00); uart_putc(v>>8); uart_putc(v);
+      uart_putc(0x00); uart_putc(v>>8); uart_putc(v&0xff);
     }
+      break;
+
+    // SHUTDOWN
+    case 0x04:
+      ad9850_shutdown();
+      uart_putc(0x00);
       break;
 
     // else ERROR

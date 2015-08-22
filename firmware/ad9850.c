@@ -28,9 +28,10 @@ void ad9850_init() {
   PORTB &= ~( (1<< DDB0) );
   PORTD &= ~( (1 << DDD6) | (1 << DDD7) );
 
+  // Enable serial mode
   ad9850_send_bit(0);
-  ad9850_send_bit(0);
-  ad9850_set(0);
+  // Shutdown device
+  ad9850_shutdown();
 }
 
 void ad9850_set(uint32_t fword) {
@@ -51,5 +52,18 @@ void ad9850_set(uint32_t fword) {
   }
 
   // Update freq:
+  ad9850_update_frequency();
+}
+
+void ad9850_shutdown() {
+  // Send ctrl bits 0,0,0
+  ad9850_send_bit(0);
+  ad9850_send_bit(0);
+  ad9850_send_bit(1);
+  ad9850_send_bit(0);
+  ad9850_send_bit(0);
+  ad9850_send_bit(0);
+  ad9850_send_bit(0);
+  ad9850_send_bit(0);
   ad9850_update_frequency();
 }

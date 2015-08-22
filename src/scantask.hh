@@ -2,8 +2,9 @@
 #define SCANTASK_HH
 
 #include "sna.hh"
+#include "vector"
 #include "abstracttask.hh"
-
+#include <QTimer>
 
 class ScanTask: public AbstractTask
 {
@@ -11,7 +12,7 @@ class ScanTask: public AbstractTask
 
 public:
   typedef enum {
-    SCAN, CALIBRATE
+    IDLE, SCAN, CALIBRATE
   } Mode;
 
 public:
@@ -29,21 +30,27 @@ public:
   void setDelay(unsigned int delay);
   void setRange(double Fmin, double Fmax, size_t Nstep);
   void save(const QString &filename);
-  void reset();
 
   void scan();
   void calibrate();
+  void reset();
   Mode mode() const;
 
-protected:
-  void run();
+protected slots:
+  void _onSetFrequency();
+  void _onFrequencySet();
+  void _onReceiveValue();
+  void _onValueReceived(double val);
+  void _onError();
 
 protected:
-  unsigned int _delay;
   Mode _mode;
+  size_t _currentIndex;
   std::vector<double> _F;
   std::vector<double> _dBm;
   std::vector<double> _baseline;
+  QTimer _pauseTimer;
+  QTimer _delayTimer;
 };
 
 

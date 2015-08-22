@@ -7,8 +7,8 @@ set(AVR_UPLOADTOOL_PORT /dev/tty.usbmodem411)
 set(AVR_MCU atmega168)
 
 # Specify fuse magic
-set(AVR_H_FUSE 0xdf)
 set(AVR_L_FUSE 0xf7)
+set(AVR_H_FUSE 0xdf)
 
 # Specify CPU frequency
 set(MCU_SPEED "16000000UL")

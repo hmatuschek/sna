@@ -14,7 +14,7 @@ SNA::SNA(const QString &portname, double Fosc, double ppm, QObject *parent)
     return;
   }
 
-  if (! _port.setBaudRate(QSerialPort::Baud38400)) {
+  if (! _port.setBaudRate(QSerialPort::Baud9600)) {
     LogMessage msg(LOG_ERROR);
     msg << "IO: Can not set baudrate.";
     Logger::get().log(msg);
@@ -38,100 +38,120 @@ SNA::SNA(const QString &portname, double Fosc, double ppm, QObject *parent)
     Logger::get().log(msg);
     return;
   }
-  if (! _port.setFlowControl(QSerialPort::HardwareControl)) {
+  if (! _port.setFlowControl(QSerialPort::NoFlowControl)) {
     LogMessage msg(LOG_ERROR);
     msg << "IO: Can not set stop bits.";
     Logger::get().log(msg);
     return;
   }
+
+  QObject::connect(&_port, SIGNAL(bytesWritten(qint64)), this, SLOT(_onBytesWritten(qint64)));
+  QObject::connect(&_port, SIGNAL(readyRead()), this, SLOT(_onReadyRead()));
 }
 
-bool
-SNA::_send(const uint8_t *tx, size_t txlen, uint8_t *rx, size_t rxlen) {
-  // send data
-  while (txlen) {
-    int n = _port.write((const char *)tx, txlen);
-    if (n<0) {
-      LogMessage msg(LOG_ERROR);
-      msg << "IO: Can not send command.";
-      Logger::get().log(msg);
-      return false;
-    }
-    tx += n; txlen -= n;
-  }
-  if (! _port.waitForReadyRead(1000)) {
-    LogMessage msg(LOG_ERROR);
-    msg << "IO: Timeout.";
-    Logger::get().log(msg);
-    return false;
-  }
-  uint8_t res;
-  if (1 != _port.read((char *)&res, 1)) {
-    LogMessage msg(LOG_ERROR);
-    msg << "IO: Can not read response.";
-    Logger::get().log(msg);
-    return false;
-  }
-  if (0x00 != res) {
-    LogMessage msg(LOG_ERROR);
-    msg << "IO: Device returned error 0x" << std::hex << int(uint16_t(res)) <<".";
-    Logger::get().log(msg);
-    return false;
-  }
-  // read data
-  while (rxlen) {
-    if (! _port.waitForReadyRead(1000)) {
-      LogMessage msg(LOG_ERROR);
-      msg << "IO: Timeout.";
-      Logger::get().log(msg);
-      return false;
-    }
-    int n = _port.read((char *)rx, rxlen);
-    if (n<0) {
-      LogMessage msg(LOG_ERROR);
-      msg << "IO: Can not read response.";
-      Logger::get().log(msg);
-      return false;
-    }
-    rx += n; rxlen -= n;
-  }
-  return true;
-}
 
 double
 SNA::Fosc() const {
   return _Fosc;
 }
 
-double
-SNA::value() {
-  uint8_t tx[1] = {0x01}, rx[2];
-  // send command
-  if (! _send(tx, 1, rx, 2)) {
-    return std::numeric_limits<double>::signaling_NaN();
-  }
-  // convert to voltage
-  double v = 2.5*double((uint16_t(rx[0])<<8) + rx[1])/0xffff;
-  // Compute dBm
-  return 16. - (2.5-v)/25e-3;
+void
+SNA::sendGetValue() {
+  uint8_t tx[1] = {0x01};
+  _mode = GET_VALUE;
+  _port.write((char *)tx, 1);
 }
 
-bool
-SNA::setFrequency(double f) {
+void
+SNA::sendSetFrequency(double f) {
   uint32_t n = (0xffffffff * f * (1+_ppm/1e6) / _Fosc);
   uint8_t tx[5] = { 0x02, uint8_t(n>>24), uint8_t(n>>16), uint8_t(n>>8), uint8_t(n) };
-  return _send(tx, 5, 0, 0);
+  _mode = SET_FREQUENCY;
+  _port.write((char *)tx, 5);
 }
 
-double
-SNA::valueAt(double f) {
-  if (! setFrequency(f)) {
-    return std::numeric_limits<double>::signaling_NaN();
-  }
-  return value();
+void
+SNA::sendShutdown() {
+  uint8_t tx[1] = { 0x04 };
+  _mode = SHUTDOWN;
+  _port.write((char *)tx, 1);
 }
 
 QSettings &
 SNA::settings() {
   return _settings;
+}
+
+void
+SNA::_onBytesWritten(qint64 n) {
+  // pass...
+}
+
+void
+SNA::_onReadyRead() {
+  _buffer.append(_port.readAll());
+  if (0 == _buffer.size()) { return; }
+
+  if (IDLE == _mode) {
+    LogMessage msg(LOG_WARNING);
+    msg << "Unexpected data received from the device! (n=" << _buffer.size() << ")";
+    Logger::get().log(msg);
+    _buffer.clear();
+    return;
+  }
+
+  if (GET_VALUE == _mode) {
+    if (0x00 != _buffer[0]) {
+      LogMessage msg(LOG_WARNING);
+      msg << "Get value: Device returned error: " << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
+      Logger::get().log(msg);
+      _mode = IDLE; _buffer.clear();
+      emit error();
+      return;
+    }
+    // If value is complete
+    if (3 > _buffer.size()) { return; }
+    // Compute dBm from value
+    double val = (uint16_t( ((uint8_t *)_buffer.data())[1] )<<8) +
+        uint16_t( ((uint8_t *)_buffer.data())[2] );
+    val = ((2.2*val/(1<<16))/25e-3) - 84.0;
+    // Remove response from buffer
+    _buffer.remove(0, 3);
+    _mode = IDLE;
+    emit valueReceived(val);
+    return;
+  }
+
+  if (SET_FREQUENCY == _mode) {
+    if (0x00 != _buffer[0]) {
+      LogMessage msg(LOG_WARNING);
+      msg << "Set frequency: Device returned error: " << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
+      Logger::get().log(msg);
+      _mode = IDLE; _buffer.clear();
+      emit error();
+      return;
+    }
+    // consume status byte:
+    _buffer.remove(0, 1);
+    _mode = IDLE;
+    // signal success
+    emit frequencySet();
+    return;
+  }
+
+  if (SHUTDOWN == _mode) {
+    if (0x00 != _buffer.at(0)) {
+      LogMessage msg(LOG_WARNING);
+      msg << "Shutdown: Device returned error: " << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
+      Logger::get().log(msg);
+      _mode = IDLE; _buffer.clear();
+      emit error();
+      return;
+    }
+    // consume status byte:
+    _buffer.remove(0, 1);
+    _mode = IDLE;
+    emit deviceShutdown();
+    return;
+  }
 }
