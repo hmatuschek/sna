@@ -14,7 +14,7 @@ As mentioned above, the [circuit](https://github.com/hmatuschek/sna/raw/master/d
 
 [![the prototype](http://i60.tinypic.com/16k17go.jpg)](http://i60.tinypic.com/16k17go.jpg)
 
-The AD8307 can handle up to 17dBm (50mW). The output power of the DDS, however, is only about 0.1mW (-10dBm). To enhence the dynamic range of the SNA, a buffer amplifier (two 2N3904, visible at the bottom-right corner) is used to increase the output to about 1-3mW (0-5dBm).  
+The AD8307 can handle up to 17dBm (50mW). The output power of the DDS, however, is only about 0.1mW (-10dBm). To enhence the dynamic range of the SNA, a buffer amplifier (two 2N3904, circuit stolen from  [here](http://rheslip.blogspot.de/2015/08/the-simple-scalar-network-analyser.html), visible at the bottom-right corner) is used to increase the output to about 1-3mW (0-5dBm).  
 
 The SNA is interfaced through the UART (RS-232) of the ATMEGA using a MAX232 level converter (visible in the bottom-left corner). In fact, the hardware is ARDUINO UNO compatible. By flashing the ARDUINO bootloader onto the ATMEGA, the SNA can be programmed easily via the RS-232 interface. 
 
