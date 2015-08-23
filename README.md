@@ -21,6 +21,116 @@ The SNA is interfaced through the UART (RS-232) of the ATMEGA using a MAX232 lev
 The [board](https://github.com/hmatuschek/sna/raw/master/doc/compact_brd.pdf) is routed such that it is possible to assemble the circuit on a perfboard without bridges. The board dimensions are kept small. The complete circuit fits into a relatively small TEKO 2/A chassis (57 x 72 x 28 mm). For a better performance, the distance between the AD8307 logarithmic amplifier and the rest of the circuit should be increased and the AD8307 should also be shielded. Due to the lack of shielding, my prototype has a relatively large noise level of about -40dBm.
 
 
+## Firmware
+The firmware for the ATMEGA 168 is extremely simply. It just waits for commands received via the serial interface and either sets the frequency of the DDS module, measures the input amplitude or shuts the DDS chip down. 
+
+### Protocol
+The communication protocol is a simple binary protocol. The host (computer) sends a command to the device (SNA) and receives a response. The device never sends data without a request. 
+
+#### Read amplitude
+This command will tell the SNA to read the current amplitude.
+
+##### Request 
+```
+  +------+
+  | 0x01 |
+  +------+
+```
+##### Response 
+On success 
+```
+  +------+------+------+
+  | 0x00 |  16b value  |
+  +------+------+------+
+```
+The 16b value (big endian) represents the 16bit fraction of the output voltage of the AD8307. This value maps linear to the dBm value where 0 represents -84dBm and 65535 17dBm.
+
+On error  
+```
+  +------+
+  | 0x01 |
+  +------+
+```
+
+#### Set frequency
+Sets the frequency of the DDS chip.
+
+##### Request 
+```
+  +------+------+------+------+------+
+  | 0x02 |     32b frequency word    |
+  +------+------+------+------+------+
+```
+The frequency word (bid endndian) represents the fraction of the output frequency relative to the oscillator frequency (125MHz). I.e. F_out = 125MHz * FW/2^32
+
+##### Response 
+On success 
+```
+  +------+
+  | 0x00 |
+  +------+
+```
+On error  
+```
+  +------+
+  | 0x01 |
+  +------+
+```
+
+#### Set frequency & read amplitude
+Sets the frequency of the DDS chip and reads the current amplitude value.
+
+##### Request 
+(see set frequency command above)
+```
+  +------+------+------+------+------+
+  | 0x03 |     32b frequency word    |
+  +------+------+------+------+------+
+```
+
+##### Response 
+On success 
+```
+  +------+------+------+
+  | 0x00 |  16b value  |
+  +------+------+------+
+```
+(see read amplitude command above)
+
+On error  
+```
+  +------+
+  | 0x01 |
+  +------+
+```
+
+#### Shutdown DDS
+
+This command will disable the DDS output. 
+
+##### Request 
+```
+  +------+
+  | 0x04 |
+  +------+
+```
+
+##### Response 
+On success 
+```
+  +------+
+  | 0x00 |
+  +------+
+```
+
+On error  
+```
+  +------+
+  | 0x01 |
+  +------+
+```
+
+
 ## License
 SNA - A simple scalar network analyzer. (c) 2015 Hannes Matuschek <hmatuschek at gmail dot com>
 
