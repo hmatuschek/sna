@@ -7,6 +7,8 @@
 #include <QSerialPort>
 #include <QSettings>
 #include <QByteArray>
+#include <QTimer>
+
 
 /** Hardware interface class.
  * This class implements the communication with the SNA hardware. */
@@ -27,9 +29,9 @@ public:
 
   double Fosc() const;
 
-  void sendGetValue();
-  void sendSetFrequency(double f);
-  void sendShutdown();
+  bool sendGetValue();
+  bool sendSetFrequency(double f);
+  bool sendShutdown();
 
   QSettings &settings();
 
@@ -42,6 +44,7 @@ signals:
 protected slots:
   void _onBytesWritten(qint64 n);
   void _onReadyRead();
+  void _onTimeout();
 
 protected:
   bool _send(const uint8_t *tx, size_t txlen, uint8_t *rx, size_t rxlen);
@@ -55,6 +58,7 @@ protected:
 
   QByteArray _buffer;
   Mode    _mode;
+  QTimer  _timeout;
 };
 
 
