@@ -22,9 +22,9 @@ The [board](https://github.com/hmatuschek/sna/raw/master/doc/compact_brd.pdf) is
 
 
 ## License
-SNA - A simple scalar network analyzer. 
+SNA - A simple scalar network analyzer. (c) 2015 Hannes Matuschek <hmatuschek at gmail dot com>
 
-(c) 2015 Hannes Matuschek <hmatuschek at gmail dot com>
+The hardware is licensed under [Createtive Commons BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) and the software under [GPL 2.0+](https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt) (see below).
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
