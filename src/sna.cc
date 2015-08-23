@@ -4,7 +4,7 @@
 
 SNA::SNA(const QString &portname, double Fosc, double ppm, QObject *parent)
   : QObject(parent), _settings("com.github.hmatuschek", "sna"), _port(portname),
-    _Fosc(Fosc), _ppm(ppm), _timeout()
+    _Fosc(Fosc), _ppm(ppm), _mode(IDLE), _timeout()
 {
   // Open port
   _port.open(QIODevice::ReadWrite);
@@ -64,6 +64,9 @@ SNA::Fosc() const {
 bool
 SNA::sendGetValue() {
   if (IDLE != _mode) { return false; }
+  LogMessage msg(LOG_DEBUG);
+  msg << "SNA: Send get value.";
+  Logger::get().log(msg);
   uint8_t tx[1] = {0x01};
   _mode = GET_VALUE;
   return (1 == _port.write((char *)tx, 1));
@@ -72,6 +75,9 @@ SNA::sendGetValue() {
 bool
 SNA::sendSetFrequency(double f) {
   if (IDLE != _mode) { return false; }
+  LogMessage msg(LOG_DEBUG);
+  msg << "SNA: Send get frequency.";
+  Logger::get().log(msg);
   uint32_t n = (0xffffffff * f * (1+_ppm/1e6) / _Fosc);
   uint8_t tx[5] = { 0x02, uint8_t(n>>24), uint8_t(n>>16), uint8_t(n>>8), uint8_t(n) };
   _mode = SET_FREQUENCY;
@@ -81,6 +87,9 @@ SNA::sendSetFrequency(double f) {
 bool
 SNA::sendShutdown() {
   if (IDLE != _mode) { return false; }
+  LogMessage msg(LOG_DEBUG);
+  msg << "SNA: Send shutdown.";
+  Logger::get().log(msg);
   uint8_t tx[1] = { 0x04 };
   _mode = SHUTDOWN;
   return (1 == _port.write((char *)tx, 1));
