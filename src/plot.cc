@@ -229,10 +229,10 @@ Plot::mouseReleaseEvent(QMouseEvent *evt) {
   _pointer_val = QPointF(_pointer_pos.x()*dx + _PXmin, (height()-_pointer_pos.y())*dy + _PYmin);
   _pointer = true;
   // log message
-  LogMessage msg(LOG_DEBUG);
+  /*LogMessage msg(LOG_DEBUG);
   msg << "Place pointer @ " << _pointer_pos.x() << ", " << _pointer_pos.y()
       << " = " << _pointer_val.x() << "Hz, " << _pointer_val.y() << "dBm";
-  Logger::get().log(msg);
+  Logger::get().log(msg); */
   update();
 }
 
