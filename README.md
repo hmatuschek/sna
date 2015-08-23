@@ -43,7 +43,7 @@ On success
   | 0x00 |  16b value  |
   +------+------+------+
 ```
-The 16b value (big endian) represents the 16bit fraction of the output voltage of the AD8307. This value maps linear to the dBm value where 0 represents -84dBm and 65535 17dBm.
+The 16bit value (big endian) represents the 16bit fraction of the output voltage of the AD8307. This value maps linear to the dBm value where 0 represents -84dBm and 65535 17dBm.
 
 On error  
 ```
@@ -61,7 +61,7 @@ Sets the frequency of the DDS chip.
   | 0x02 |     32b frequency word    |
   +------+------+------+------+------+
 ```
-The frequency word (bid endndian) represents the fraction of the output frequency relative to the oscillator frequency (125MHz). I.e. F_out = 125MHz * FW/2^32
+The 32 bit frequency word (big endian) represents the fraction of the output frequency relative to the oscillator frequency (125MHz). I.e. F_out = 125MHz * FW/2^32
 
 ##### Response 
 On success 
