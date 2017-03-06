@@ -2,9 +2,9 @@
 #include "logger.hh"
 #include <limits>
 
-SNA::SNA(const QString &portname, double Fosc, double ppm, QObject *parent)
+SNA::SNA(const QString &portname, double vRef, double Fosc, double ppm, QObject *parent)
   : QObject(parent), _settings("com.github.hmatuschek", "sna"), _port(portname),
-    _Fosc(Fosc), _ppm(ppm), _mode(IDLE), _timeout()
+    _Fosc(Fosc), _ppm(ppm), _ref(vRef), _mode(IDLE), _timeout()
 {
   // Open port
   _port.open(QIODevice::ReadWrite);
@@ -76,7 +76,7 @@ bool
 SNA::sendSetFrequency(double f) {
   if (IDLE != _mode) { return false; }
   LogMessage msg(LOG_DEBUG);
-  msg << "SNA: Send get frequency.";
+  msg << "SNA: Send set frequency.";
   Logger::get().log(msg);
   uint32_t n = (0xffffffff * f * (1+_ppm/1e6) / _Fosc);
   uint8_t tx[5] = { 0x02, uint8_t(n>>24), uint8_t(n>>16), uint8_t(n>>8), uint8_t(n) };
@@ -123,7 +123,8 @@ SNA::_onReadyRead() {
   } else if (GET_VALUE == _mode) {
     if (0x00 != _buffer[0]) {
       LogMessage msg(LOG_WARNING);
-      msg << "Get value: Device returned error: " << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
+      msg << "Get value: Device returned error: "
+          << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
       Logger::get().log(msg);
       _mode = IDLE; _buffer.clear();
       emit error();
@@ -138,7 +139,8 @@ SNA::_onReadyRead() {
     // Compute dBm from value
     double val = (uint16_t( ((uint8_t *)_buffer.data())[1] )<<8) +
         uint16_t( ((uint8_t *)_buffer.data())[2] );
-    val = ((2.2*val/(1<<16))/25e-3) - 84.0;
+    // val = ((2.2*val/(1<<16))/25e-3) - 84.0;
+    val = ((_ref*val/(1<<16))/25e-3) - 84.0;
     // Remove response from buffer
     _buffer.remove(0, 3);
     _mode = IDLE;
@@ -146,7 +148,8 @@ SNA::_onReadyRead() {
   } else if (SET_FREQUENCY == _mode) {
     if (0x00 != _buffer[0]) {
       LogMessage msg(LOG_WARNING);
-      msg << "Set frequency: Device returned error: " << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
+      msg << "Set frequency: Device returned error: "
+          << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
       Logger::get().log(msg);
       _mode = IDLE; _buffer.clear();
       emit error();
@@ -160,7 +163,8 @@ SNA::_onReadyRead() {
   } else if (SHUTDOWN == _mode) {
     if (0x00 != _buffer.at(0)) {
       LogMessage msg(LOG_WARNING);
-      msg << "Shutdown: Device returned error: " << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
+      msg << "Shutdown: Device returned error: "
+          << std::hex << uint16_t(((uint8_t *)_buffer.data())[0]);
       Logger::get().log(msg);
       _mode = IDLE; _buffer.clear();
       emit error();

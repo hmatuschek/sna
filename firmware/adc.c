@@ -8,8 +8,8 @@ static volatile uint8_t  adc_finished = 0;
 static volatile uint16_t adc_result = 0;
 
 void adc_init() {
-  // Disable digital input in ADC4
-  DIDR0 |= (1<<4);
+  // Disable digital input in ADC5
+  DIDR0 |= (1<<ADC5D);
   // Enable ADC & set prescaler
   ADCSRA =
       // Enable ADC
@@ -24,8 +24,8 @@ void adc_init() {
       (0 << REFS1) | (0 << REFS0) |
       // right adjust
       (0 << ADLAR) |
-      // Select ADC4 as intput
-      (0 << MUX3) | (1 << MUX2) | (0 << MUX1) | (0 << MUX0);
+      // Select ADC5 as intput
+      (0 << MUX3) | (1 << MUX2) | (0 << MUX1) | (1 << MUX0);
 }
 
 uint16_t adc_get() {

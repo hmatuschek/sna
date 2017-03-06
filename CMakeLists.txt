@@ -4,6 +4,8 @@ project(SNA)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(InstallHeadersWithDirectory)
 
+option(WITH_FIRMWARE On)
+
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5SerialPort REQUIRED)
@@ -27,8 +29,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ggdb")
 
 # application sources...
 add_subdirectory(src)
-# firmware sources
-add_subdirectory(firmware)
+if (${WITH_FIRMWARE})
+ # firmware sources
+ add_subdirectory(firmware)
+endif (${WITH_FIRMWARE})
 
 # Source distribution packages:
 set(CPACK_PACKAGE_VERSION_MAJOR "1")

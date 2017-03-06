@@ -13,9 +13,11 @@ public:
 
   QString name();
   QString systemLocation();
+  double refVoltage();
 
 protected:
   QComboBox *_ports;
+  QLineEdit *_ref;
 };
 
 #endif // PORTDIALOG_HH

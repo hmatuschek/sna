@@ -25,7 +25,7 @@ public:
   } Mode;
 
 public:
-  explicit SNA(const QString &portname, double Fosc=125e6, double ppm=0, QObject *parent=0);
+  explicit SNA(const QString &portname, double vRef=2.5, double Fosc=125e6, double ppm=0, QObject *parent=0);
 
   double Fosc() const;
 
@@ -55,6 +55,7 @@ protected:
   QSerialPort _port;
   double _Fosc;
   double _ppm;
+  double _ref;
 
   QByteArray _buffer;
   Mode    _mode;
