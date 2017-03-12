@@ -109,6 +109,9 @@ void
 SNA::_onReadyRead() {
   _buffer.append(_port.readAll());
   if (0 == _buffer.size()) { return; }
+  LogMessage msg(LOG_DEBUG);
+  msg << "Received " << _buffer.size() << "b...";
+  Logger::get().log(msg);
 
   // Stop timer
   _timeout.stop();
