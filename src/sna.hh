@@ -8,7 +8,7 @@
 #include <QSettings>
 #include <QByteArray>
 #include <QTimer>
-
+#include <inttypes.h>
 
 /** Hardware interface class.
  * This class implements the communication with the SNA hardware. */
