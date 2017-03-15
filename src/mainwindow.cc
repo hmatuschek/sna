@@ -2,9 +2,39 @@
 #include <QVBoxLayout>
 #include "aboutwidget.hh"
 
+StatusLogHandler::StatusLogHandler(QStatusBar *status)
+  : QObject(0), _status(status)
+{
+  connect(_status, SIGNAL(destroyed(QObject*)), this, SLOT(_onStatusDeleted()));
+}
+
+void
+StatusLogHandler::handle(const LogMessage &msg) {
+  if (0 == _status)
+    return;
+
+  QString buffer;
+  QTextStream stream(&buffer);
+  switch (msg.level()) {
+    case LOG_DEBUG: stream << "DEBUG: "; break;
+    case LOG_INFO: stream << "INFO: "; break;
+    case LOG_WARNING: stream << "WARN: "; break;
+    case LOG_ERROR: stream << "ERROR: "; break;
+  }
+  stream << QString::fromStdString(msg.str());
+
+  _status->showMessage(buffer);
+}
+
+void
+StatusLogHandler::_onStatusDeleted() {
+  _status = 0;
+}
+
+
 
 MainWindow::MainWindow(SNA &sna, QWidget *parent) :
-  QMainWindow(parent), _sna(sna)
+  QMainWindow(parent), _sna(sna), _status(0)
 {
   setWindowTitle(tr("Scalar Network Analyzer"));
 
@@ -20,6 +50,9 @@ MainWindow::MainWindow(SNA &sna, QWidget *parent) :
   _view->addWidget(_scan);
   _view->addWidget(_poll);
   _view->addWidget(new AboutWidget());
+
+  _status = this->statusBar();
+  Logger::get().addHandler(new StatusLogHandler(_status));
 
   QVBoxLayout *layout = new QVBoxLayout();
   layout->addWidget(_taskSelect, 0);

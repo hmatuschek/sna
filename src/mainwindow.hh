@@ -9,6 +9,25 @@
 #include "sna.hh"
 #include "livepanel.hh"
 #include "scanpanel.hh"
+#include <QStatusBar>
+#include "logger.hh"
+
+class StatusLogHandler: public QObject, public LogHandler
+{
+  Q_OBJECT
+
+public:
+  StatusLogHandler(QStatusBar *status);
+
+  void handle(const LogMessage &msg);
+
+protected slots:
+  void _onStatusDeleted();
+
+protected:
+  QStatusBar *_status;
+};
+
 
 class MainWindow : public QMainWindow
 {
@@ -28,6 +47,7 @@ protected:
 
   PollPanel *_poll;
   ScanPanel *_scan;
+  QStatusBar *_status;
 };
 
 #endif // MAINWINDOW_HH

@@ -3,7 +3,7 @@
 #include <limits>
 
 SNA::SNA(const QString &portname, double vRef, double Fosc, double ppm, QObject *parent)
-  : QObject(parent), _settings("com.github.hmatuschek", "sna"), _port(portname),
+  : QObject(parent), _settings(), _port(portname),
     _Fosc(Fosc), _ppm(ppm), _ref(vRef), _mode(IDLE), _timeout()
 {
   // Open port

@@ -5,6 +5,8 @@
 #include "vector"
 #include "abstracttask.hh"
 #include <QTimer>
+#include <QVector>
+
 
 class ScanTask: public AbstractTask
 {
@@ -19,11 +21,11 @@ public:
   ScanTask(SNA &sna, QObject *parent=0);
   virtual ~ScanTask();
 
-  inline const std::vector<double> &F() const { return _F; }
+  inline const QVector<double> &F() const { return _F; }
   inline double Fmin() const { return _F.front(); }
   inline double Fmax() const { return _F.back(); }
-  inline const std::vector<double> &dBm() const { return _dBm; }
-  inline const std::vector<double> &baseline() const { return _baseline; }
+  inline const QVector<double> &dBm() const { return _dBm; }
+  inline const QVector<double> &baseline() const { return _baseline; }
   inline size_t steps() const { return _F.size(); }
 
   unsigned int delay() const;
@@ -46,9 +48,9 @@ protected slots:
 protected:
   Mode _mode;
   size_t _currentIndex;
-  std::vector<double> _F;
-  std::vector<double> _dBm;
-  std::vector<double> _baseline;
+  QVector<double> _F;
+  QVector<double> _dBm;
+  QVector<double> _baseline;
   QTimer _pauseTimer;
   QTimer _delayTimer;
 };

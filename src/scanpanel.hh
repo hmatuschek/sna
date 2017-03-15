@@ -9,7 +9,7 @@
 
 #include "sna.hh"
 #include "scantask.hh"
-#include "plot.hh"
+#include "qcustomplot.hh"
 
 
 /** Scan control widget.
@@ -39,10 +39,15 @@ protected slots:
   void onProgress(double prog);
   /** Save button callback. */
   void onSave();
-  /** Setset button callback. */
+  /** Clear button callback. */
+  void onClear();
+  /** Reset button callback. */
   void onReset();
   /** Gets called if frequency range or step size is changed. */
   void onCalibrationNeeded();
+  void onClick(QMouseEvent *evt);
+  void reset3dBMeasurement();
+  void update3dBMeasurement(QCPGraph *graph);
 
 protected:
   /** Reference of the SNA object. */
@@ -50,7 +55,18 @@ protected:
   /** The scan task object. */
   ScanTask _scan;
   /** The plot window. */
-  Plot *_plot;
+  QCustomPlot *_plot;
+  /** A tracer to highlight a certain data-point. */
+  QCPItemTracer *_tracer;
+  QCPItemText *_tracerLabel;
+  QCPItemTracer *_bwMax;
+  QCPItemText   *_bwMaxText;
+  QCPItemTracer *_bwLeft;
+  QCPItemText   *_bwLeftText;
+  QCPItemTracer *_bwRight;
+  QCPItemText   *_bwRightText;
+  QCPItemLine   *_bwLine;
+  QCPItemText   *_bwText;
   /** F min selection. */
   QDoubleSpinBox *_Fmin;
   /** F max selection. */
@@ -63,6 +79,8 @@ protected:
   QProgressBar *_progress;
   /** Calibrate button. */
   QPushButton *_calibrate;
+  /** Clear button. */
+  QPushButton *_clear;
   /** Reset button. */
   QPushButton *_reset;
   /** Start button. */
